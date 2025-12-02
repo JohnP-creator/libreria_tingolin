@@ -8,9 +8,24 @@ use Illuminate\Support\Facades\Storage;
 
 class LibroController extends Controller
 {
-  public function index()
+  public function index(Request $request)
   {
-    $libros = Libro::latest()->paginate(10);
+    $query = Libro::query();
+
+    // Si hay un término de búsqueda
+    if ($request->has('search') && $request->search != '') {
+      $search = $request->search;
+
+      $query->where(function ($q) use ($search) {
+        $q->where('titulo', 'LIKE', "%{$search}%")
+          ->orWhere('autor', 'LIKE', "%{$search}%")
+          ->orWhere('isbn', 'LIKE', "%{$search}%")
+          ->orWhere('editorial', 'LIKE', "%{$search}%");
+      });
+    }
+
+    $libros = $query->latest()->paginate(10);
+
     return view('libros.index', compact('libros'));
   }
 
